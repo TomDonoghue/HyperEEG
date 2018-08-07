@@ -1,5 +1,7 @@
 """Plots for HyperEEG project."""
 
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,9 +20,9 @@ def plot_results(times, results, labels, save_fig=False, save_name=None):
 
     Parameters
     ----------
-    times :
+    times : 1d array
         xx
-    results :
+    results : list of 1d arrays
         xx
     labels :
         xx
