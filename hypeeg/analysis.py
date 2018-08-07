@@ -5,9 +5,8 @@ import numpy as np
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
 
+from hypeeg.utils import feature_dat
 from hypeeg.settings import K_FOLD
-
-from utils import feature_dat
 
 ###################################################################################################
 ###################################################################################################
@@ -37,7 +36,7 @@ def within_subj_classification(all_data, all_labels):
 
     # Run cross-validated classification within each subject
     scores = np.zeros(shape=[len(all_data), K_FOLD])
-    for s_ind, subj_data, subj_labels in zip(range(n_subjs), all_data, all_labels):
+    for s_ind, subj_data, subj_labels in zip(range(len(all_data)), all_data, all_labels):
         scores[s_ind, :] = cross_val_score(CLF, feature_dat(subj_data), subj_labels, cv=K_FOLD)
 
     return scores
@@ -118,25 +117,3 @@ def time_btwn_subj_classification(all_data, all_labels):
             scores[s_ind, t_ind] = CLF.score(t_step.T, subj_labels)
 
     return scores
-
-
-def maxabs(dat, dim):
-    """   """
-
-    return np.max(np.abs(dat), dim)
-
-###################################################################################################
-###################################################################################################
-
-# Set the collection of ways to average across features
-#  Note: these are used
-AVGS = {
-    'maxabs' : maxabs,
-    'max' : np.max,
-    'min' : np.min,
-    'mean' : np.mean,
-    'median' : np.median
-}
-
-###################################################################################################
-###################################################################################################
