@@ -5,7 +5,8 @@ from collections import Counter
 import numpy as np
 from scipy.stats import zscore
 
-from settings import N_EPOCHS, AVGS, DEFAULT_AVG
+from hypeeg.features import AVGS
+from hypeeg.settings import N_EPOCHS, N_PER_COND, DEFAULT_AVG
 
 ###################################################################################################
 ###################################################################################################
@@ -32,22 +33,20 @@ def extract_data(dat, l_freq=None, h_freq=None, resample=False):
     n_evc_a, n_evc_b = ev_counts.values()
 
     # Generate labels
-    lab_a = np.ones(shape=[n_per_cond]) * -1
-    lab_b = np.ones(shape=[n_per_cond])
+    lab_a = np.ones(shape=[N_PER_COND]) * -1
+    lab_b = np.ones(shape=[N_PER_COND])
 
     # Filter data
-    if l_freq is not None:
-        dat.filter(l_freq=l_freq)
-    if h_freq is not None:
-        dat.filter(h_freq=h_freq)
+    if l_freq or h_freq:
+        dat.filter(l_freq=l_freq, h_freq=h_freq)
 
     # Resample
     if resample:
         dat.resample(100)
 
     # Extract trial data
-    eps_a = dat[evc_a]._data[0:n_per_cond, 0:128, :]
-    eps_b = dat[evc_b]._data[0:n_per_cond, 0:128, :]
+    eps_a = dat[evc_a]._data[0:N_PER_COND, 0:128, :]
+    eps_b = dat[evc_b]._data[0:N_PER_COND, 0:128, :]
 
     # Check all our shapes and sizes are correct
     assert len(lab_a) == np.shape(eps_a)[0]
@@ -62,8 +61,8 @@ def extract_data(dat, l_freq=None, h_freq=None, resample=False):
     return data, labels
 
 
-def feature_dat(dat, avg_type=AVG_TO_USE):
-    """Convert epochs
+def feature_dat(dat, avg_type=DEFAULT_AVG):
+    """Convert epochs to feature representation for classification.
 
     Parameters
     ----------

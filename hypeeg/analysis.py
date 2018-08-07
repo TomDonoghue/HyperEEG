@@ -1,5 +1,7 @@
 """Analysis functions for HyperEEG project."""
 
+from copy import deepcopy
+
 import numpy as np
 
 from sklearn import svm
@@ -24,14 +26,15 @@ def within_subj_classification(all_data, all_labels):
     Parameters
     ----------
     data : list of 3d array
-        xx
+        Epoched data matrices for each subject.
     labels : list of 1d array
-        xx
+        Labels for each trial for each subject.
 
     Returns
     -------
-    scores : 1d array
-        xx
+    scores : 2d array
+        Scores for within subject classification, across cross-val folds.
+            Shape: [n_subjs, n_folds]
     """
 
     # Run cross-validated classification within each subject
@@ -43,13 +46,27 @@ def within_subj_classification(all_data, all_labels):
 
 
 def time_within_subj_classification(all_data, all_labels):
-    """Run within subject classification stepping across each time point."""
+    """Run within subject classification stepping across each time point.
+
+    Parameters
+    ----------
+    data : list of 3d array
+        Epoched data matrices for each subject.
+    labels : list of 1d array
+        Labels for each trial for each subject.
+
+    Returns
+    -------
+    scores : 3d array
+        Scores for within subject classification, across cross folds and time points.
+            Shape: [n_subjs, n_times, n_folds]
+    """
 
     n_times = np.shape(all_data[0])[2]
 
     scores = np.zeros(shape=[len(all_data), n_times, K_FOLD])
 
-    for s_ind, subj_data, subj_labels in zip(range(n_subjs), all_data, all_labels):
+    for s_ind, subj_data, subj_labels in zip(range(len(all_data)), all_data, all_labels):
         for t_ind, t_step in enumerate(subj_data.T):
             scores[s_ind, t_ind, :] = cross_val_score(CLF, t_step.T, subj_labels, cv=K_FOLD)
 

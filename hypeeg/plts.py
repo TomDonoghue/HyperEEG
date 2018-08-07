@@ -1,12 +1,30 @@
-"""  """
+"""Plots for HyperEEG project."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-##
-##
+from scipy.stats import sem
 
-def plot_results(times, results, labels):
-    """   """
+###################################################################################################
+###################################################################################################
+
+PLTS_PATH = '/Users/tom/Desktop/HyperEEG_Project/Figures/'
+
+###################################################################################################
+###################################################################################################
+
+def plot_results(times, results, labels, save_fig=False, save_name=None):
+    """Plot
+
+    Parameters
+    ----------
+    times :
+        xx
+    results :
+        xx
+    labels :
+        xx
+    """
 
     fig, ax = plt.subplots(figsize=(14, 6))
 
@@ -43,9 +61,25 @@ def plot_results(times, results, labels):
     # Add a legend
     plt.legend(labels, fontsize=14)
 
+    if save_fig:
+        save_name = os.path.join(PLTS_PATH, save_name + '.pdf')
+        plt.savefig(save_name, bbox_inches='tight', dpi=300)
+
 
 def plot_time_class(times, dat, err=None, ax=None, *args, **kwargs):
-    """   """
+    """
+
+    Parameters
+    ----------
+    times :
+        xx
+    dat :
+        xx
+    err :
+        xx
+    ax :
+        xx
+    """
 
     if not ax:
         fig, ax = plt.subplots(figsize=(14, 6))
