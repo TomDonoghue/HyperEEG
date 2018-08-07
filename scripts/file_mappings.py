@@ -49,31 +49,31 @@ def main():
     set_log_level('CRITICAL')
 
     # Get list of all available subjects
-    subj_nums = [file for file in os.listdir(dat_path) if file[0] is not '.']
+    subj_nums = [file for file in os.listdir(DAT_PATH) if file[0] is not '.']
 
     file_labels = []
     for sub_num in subj_nums:
 
-        subj_path = os.path.join(dat_path, sub_num, 'EEG', 'raw', 'raw_format')
+        subj_path = os.path.join(DAT_PATH, sub_num, 'EEG', 'raw', 'raw_format')
         subj_files = [file for file in os.listdir(subj_path) if ('A0' in file and file.endswith('.raw'))]
 
-        print('Running Subject #', subj_file.split('.')[0])
+        print('\nRunning Subject #', sub_num)
 
         for ind, subj_file in enumerate(subj_files):
 
-            raw = mne.io.read_raw_egi(os.path.join(subj_path, subj_file), preload=False)
+            raw = read_raw_egi(os.path.join(subj_path, subj_file), preload=False)
 
             cur_task = None
 
-            for key, vals in events.items():
+            for key, vals in EVENTS.items():
 
                 for val in vals:
                     if cln_dict(raw.event_id) == val:
+                        print('\tFound event:', key)
                         cur_task = key
                         break
 
             if not cur_task:
-                print(raw.event_id)
                 print('\tNo match found for file.')
 
             file_labels.append((subj_file[0:9], subj_file, cur_task))
