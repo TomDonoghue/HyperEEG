@@ -11,33 +11,24 @@ Moving from notebook -> script
 import os
 from copy import deepcopy
 import fnmatch
-import csv
 from collections import Counter
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 import mne
+from mne import set_log_level
 from mne.event import define_target_events
 from mne.preprocessing import ICA
 
-from faster import faster_bad_channels
-
 from autoreject import AutoReject
+from faster import faster_bad_channels
 
 ###################################################################################################
 ###################################################################################################
 
 # SETTINGS
-
-#  Anything that is chosen variable, across all subjects
-#    Anything that we might change
-#    Purpose: everything in one place
-
-# Note: Settings are defined as globals
-#  This makes them accessible from within the 'main' function
-
-# Settings
 L_FREQ, H_FREQ = 0.1, 30. # filter settings
 TMIN, TMAX = -1., 1. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
@@ -47,52 +38,41 @@ EOG_CHS = ['E8', 'E14','E21','E25']
 RUN_ICA = False
 RUN_AUTOREJECT = False
 
-# Set data path
-DAT_PATH = 'path/to/data/files'
+# Set paths
+BASE_PATH = '/Users/tom/Desktop/HyperEEG_Project/Data/'
+DATA_PATH = os.path.join(BASE_PATH, 'raw')
+PROC_PATH = os.path.join(BASE_PATH, 'proc')
+ICA_PATH  = os.path.join(BASE_PATH, 'ica')
+FIG_PATH  = os.path.join(BASE_PATH, 'figs')
 
-# Set other settings
-MY_VAR = 'value'
+SUBJ_NUMS = [name for name in os.listdir(DATA_PATH) if name[0] is not '.']
 
 ###################################################################################################
 ###################################################################################################
+
+# Load the file that maps all the subject files to task type
+fms = pd.read_csv('file_mappings.csv', header=None, names=['SUBNUM', 'FILE', 'TASK'])
 
 # Running through the subjects
-#  Everything from load & after - in a loop
-
 def main():
 
-    # SETUP
     # Any work that's outside the loop
 
-    # Get all subj files (clean the list if needed)
-    data_path = '/home/andrew/adykstra/Desktop/Data/'
-    subjects = [file for file in os.listdir(data_path) if fnmatch.fnmatch(file, 'A*')]
-
     # Loop across all subjects
-    for subj_ind, subj in enumerate(subjects):
+    for idx, subnum in enumerate(SUBJ_NUMS):
 
         # Add status updates
-        print('Running Subject # ', subj_ind)
+        print('Running Subject # ', subnum)
 
         # Load subject of data
-        subj_path = os.path.join(data_path, subj, 'EEG', 'raw', 'raw_format')
-        subj_files = os.listdir(subj_path)
-        subj_files = [file for file in subj_files if fnmatch.fnmatch(file, '*.raw')]
-
-        # ALSO ADD SOME FILE SELECTION SOMEWHERE HERE on subj_files list
-        # INSERT CODE TO LOAD DATA
-        f_nums = ['06.raw', '08.raw', '10.raw'] # this needs to change
+        subj_path = os.path.join(DATA_PATH, subnum, 'EEG', 'raw', 'raw_format')
+        subj_files = list(fms[fms[fms.SUBNUM == subnum].TASK == 'contrast'].FILE.values)
+        
+        # load raw files
         raws = []
-        for f_num in f_nums:
-            try:
-                raw_file = get_files(subj_files, f_num)
-                raws.append(mne.io.read_raw_egi(os.path.join(subj_path, raw_file),
-                                                preload=True, verbose=False))
-            except:
-                pass
-
-        if len(raws) == 0:
-            raise ValueError('There are no valid blocks for this subject.')
+        for raw_file in subj_files:
+            raws.append(mne.io.read_raw_egi(os.path.join(subj_path, raw_file), 
+                                            preload=True, verbose=False))
             
         # Set montage, drop misc channels, and filter
         montage = mne.channels.read_montage('GSN-HydroCel-129',
@@ -154,7 +134,7 @@ def main():
         
         bad_ica_comps = []
         for ch in eog_chs:
-            inds, scores = ica.find_bads_eog(raw_hpf, ch_name=ch, threshold=3,
+            inds, scores = ica.find_bads_eog(raw_hpf, ch_name=ch, threshold=4,
                                              l_freq=1, h_freq=8, verbose=False)
             bad_ica_comps.extend(inds)
             ica.plot_scores(scores, exclude=inds)
@@ -164,19 +144,19 @@ def main():
         
         # plot and save bad components
         fig = ica.plot_components(picks=np.array(bad_ica_comps));
-        fig_name = 'ica_scalp_maps.png'
+        fig_name = FIG_PATH + subnum + '_ica_scalp_maps.png'
         fig.savefig(fig_name, dpi=150)
         fig.close()
         
         # save ICA decomposition
-        ica_filename = subj + '-ica.fif'
+        ica_filename = ICA_PATH + subnum + '-ica.fif'
         ica.save(ica_filename)
 
         # apply ICA to both 
         epochs = ica.apply(epochs)
         raw = ica.apply(raw)
 
-        raw_filename = subj + '-raw.fif'
+        raw_filename = DATA_PATH + subnum + '-raw.fif'
         raw.save(raw_filename, overwrite=True)
         
         # use AutoReject to reject bad epochs and interpolate bad channels
@@ -184,14 +164,10 @@ def main():
         epochs, rej_log = ar.fit_transform(epochs, return_log=True)
         epochs.equalize_event_counts(new_event_ids, method='mintime')
 
-        epochs_filename = subj + '_preprocessed-epo.fif'
-        epochs.save(epochs_filename, overwrite=True)
+        epochs.info['bads'] = [] # no need for bad channels after AutoReject
         
-        # Note: might have to add try/excepts for problems
-        try:
-            pass
-        except:
-            print('Subject number ' + str(subj_ind) + ' failed.')
+        epochs_filename = DATA_PATH + subnum + '_preprocessed-epo.fif'
+        epochs.save(epochs_filename, overwrite=True)
 
         # Note: remember to collect things of interest into group stores
         #  and/or save out individual files (however makes sense)
