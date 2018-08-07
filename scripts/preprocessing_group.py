@@ -88,6 +88,12 @@ def main():
         # Get the files that match the desired task, load and concatenate data
         subj_path = os.path.join(DATA_PATH, subnum, 'EEG', 'raw', 'raw_format')
         subj_files = list(fms.loc[(fms["SUBNUM"] == subnum) & (fms["TASK"] == TASK)]["FILE"].values)
+
+        # Stop if subject doesn't have enough data
+        if len(subj_files) < 2:
+            print('Subject does not have enough data')
+            continue
+        
         raws = [mne.io.read_raw_egi(os.path.join(subj_path, raw_file), preload=True) for raw_file in subj_files]
 
         # Set montage, drop misc channels, and filter
