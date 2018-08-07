@@ -6,6 +6,7 @@ Notes
 """
 
 import os
+import csv
 from copy import deepcopy
 from collections import Counter
 
@@ -62,6 +63,9 @@ fms = pd.read_csv('file_mappings.csv', header=None, names=['SUBNUM', 'FILE', 'TA
 
 # Running through the subjects
 def main():
+
+    # Initialize to keep track of how many events each subject has
+    n_kept_events = []
 
     # Set the MNE print out level
     set_log_level('ERROR')
@@ -157,9 +161,10 @@ def main():
             ica.exclude = list(set(bad_ica_comps))
 
             # Plot and save bad components
-            fig = ica.plot_components(picks=np.array(bad_ica_comps), show=False)
-            fig_name = os.path.join(FIG_PATH, subnum + '_ica_scalp_maps.png')
-            fig.savefig(fig_name, dpi=150)
+            if len(bad_ica_comps) > 0:
+                fig = ica.plot_components(picks=np.array(bad_ica_comps), show=False)
+                fig_name = os.path.join(FIG_PATH, subnum + '_ica_scalp_maps.png')
+                fig.savefig(fig_name, dpi=150)
 
             # Save out ICA decomposition
             ica_filename = os.path.join(ICA_PATH, subnum + '-ica.fif')
@@ -178,21 +183,34 @@ def main():
 
             print('\tRunning AutoReject')
 
-            # use AutoReject to reject bad epochs and interpolate bad channels
+            # Use AutoReject to reject bad epochs and interpolate bad channels
             ar = AutoReject(n_jobs=4, random_state=1, verbose=False, cv=3)
             epochs, rej_log = ar.fit_transform(epochs, return_log=True)
-            epochs.equalize_event_counts(new_event_ids, method='mintime')
-
             epochs.info['bads'] = [] # no need for bad channels after AutoReject
+
+            # Save out autoreject log, as a pickled object
+            pickle.dump(rej_log, open(os.path.join(ICA_PATH, subnum + "-ar.p"), "wb"))
 
         ## SAVE OUT DATA
 
+        # Enforce consistencty in the number of events per condition
+        epochs.equalize_event_counts(new_event_ids, method='mintime')
+
+        # Save out pre-processed data
         epochs_filename = os.path.join(PROC_PATH, subnum + '_preprocessed-epo.fif')
         epochs.save(epochs_filename)
 
-        print('\tData Saved')
+        print('\tData Saved - {:2d} kept events'.format(len(epochs)))
+
+        n_kept_events.append((subnum, len(epochs)))
 
         print('\nGreat Success.\n')
+
+    # Save out the log file of number of good events per subject
+    with open('event_log.csv', 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        for ev_info in n_kept_events:
+            writer.writerow(list(ev_info))
 
 
 if __name__ == "__main__":
