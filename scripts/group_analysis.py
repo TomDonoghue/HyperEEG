@@ -25,6 +25,8 @@ from analysis import (within_subj_classification, time_within_subj_classificatio
 
 from utils import extract_data, make_2d, make_3d, print_avg, print_avgs
 
+from plts import plot_results
+
 ###################################################################################################
 ###################################################################################################
 
