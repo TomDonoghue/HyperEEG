@@ -1,9 +1,11 @@
 """Analysis functions for HyperEEG project."""
 
 import numpy as np
+
+from sklearn import svm
 from sklearn.model_selection import cross_val_score
 
-from settings import K_FOLD
+from hypeeg.settings import K_FOLD
 
 ###################################################################################################
 ###################################################################################################
@@ -11,6 +13,9 @@ from settings import K_FOLD
 # Initialize an SVM classification object
 #CLF = svm.SVC(kernel='linear')
 CLF = svm.LinearSVC()
+
+###################################################################################################
+###################################################################################################
 
 def within_subj_classification(all_data, all_labels):
     """Run within subject classification within each subject for a list of subjects data.
@@ -117,3 +122,19 @@ def maxabs(dat, dim):
     """   """
 
     return np.max(np.abs(dat), dim)
+
+###################################################################################################
+###################################################################################################
+
+# Set the collection of ways to average across features
+#  Note: these are used
+AVGS = {
+    'maxabs' : maxabs,
+    'max' : np.max,
+    'min' : np.min,
+    'mean' : np.mean,
+    'median' : np.median
+}
+
+###################################################################################################
+###################################################################################################
