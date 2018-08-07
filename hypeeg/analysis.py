@@ -7,6 +7,8 @@ from sklearn.model_selection import cross_val_score
 
 from hypeeg.settings import K_FOLD
 
+from utils import feature_dat
+
 ###################################################################################################
 ###################################################################################################
 

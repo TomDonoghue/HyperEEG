@@ -44,6 +44,7 @@ L_FREQ, H_FREQ = 0.1, 30. # filter settings
 TMIN, TMAX = -1., 1. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
 EOG_CHS = ['E8', 'E14','E21','E25']
+N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
 
 # Processing options
 RUN_ICA = True
@@ -117,6 +118,14 @@ def main():
         # Collapse new events into an array
         new_events = np.concatenate((np.array(new_events[0]), np.array(new_events[1])), axis=0)
         new_event_ids = dict(left=21, right=22)
+
+        # Check if subject has enough epochs to continue
+        if not np.any(new_events):
+            print('Subject has no correct trials...')
+            continue
+        elif new_events.shape[1] < N_EPOCHS:
+            print('Subject has too few trials for analysis')
+            continue
 
         # Create epochs object
         epochs = mne.Epochs(raw, new_events, new_event_ids, tmin=TMIN, tmax=TMAX,
@@ -196,6 +205,11 @@ def main():
 
         # Enforce consistencty in the number of events per condition
         epochs.equalize_event_counts(new_event_ids, method='mintime')
+
+        # Don't save the subject's data if they don't have enough epochs
+        if len(epochs) < N_EPOCHS:
+            print('Subject has too few trials for analysis')
+            continue
 
         # Save out pre-processed data
         epochs_filename = os.path.join(PROC_PATH, subnum + '_preprocessed-epo.fif')
