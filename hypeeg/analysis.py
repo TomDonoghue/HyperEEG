@@ -1,6 +1,9 @@
 """Analysis functions for HyperEEG project."""
 
 import numpy as np
+from sklearn.model_selection import cross_val_score
+
+from settings import K_FOLD
 
 ###################################################################################################
 ###################################################################################################
