@@ -8,6 +8,14 @@ Moving from notebook -> script
 """
 
 ## IMPORTS
+import os
+import fnmatch
+import csv
+from collections import Counter
+
+import numpy as np
+import matplotlib.pyplot as plt
+
 import mne
 
 ###################################################################################################
@@ -44,21 +52,31 @@ def main():
     # Any work that's outside the loop
 
     # Get all subj files (clean the list if needed)
-    subj_files = []
-
-    # Set up any group level collections
-    outputs = np.array(shape=[10, 10])
+    data_path = '/Users/jarrodmhicks/Desktop/Data/'
+    subjects = [file for file in os.listdir(data_path) if fnmatch.fnmatch(file, 'A*')]
 
     # Loop across all subjects
-    for subj_ind, subj_file in enumerate(subj_files):
-        pass
+    for subj_ind, subj_file in enumerate(subjects):
 
         # Add status updates
         print('Running Subject # ', subj_ind)
 
         # Load subject of data
+        subj_path = os.path.join(data_path, subj, 'EEG', 'raw', 'raw_format')
+        subj_files = os.listdir(subj_path)
+        subj_files = [file for file in subj_files if fnmatch.fnmatch(file, '*.raw')]
+
+        # ALSO ADD SOME FILE SELECTION SOMEWHERE HERE on subj_files list
+        # INSERT CODE TO LOAD DATA
 
         # Do a pre-processing
+
+        # Load standard montage, drop misc channels, and display channel locations# Load
+        montage = mne.channels.read_montage('GSN-HydroCel-129', ch_names=raws[0].ch_names)
+
+        for raw in raws:
+            raw.set_montage(montage)
+            raw.drop_channels(raw.ch_names[128:-1])
 
         # Do analyses of interest
 
