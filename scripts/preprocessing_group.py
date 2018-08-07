@@ -7,6 +7,7 @@ Notes
 
 import os
 import csv
+import pickle
 from copy import deepcopy
 from collections import Counter
 
