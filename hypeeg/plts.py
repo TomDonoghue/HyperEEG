@@ -10,7 +10,7 @@ from scipy.stats import sem
 ###################################################################################################
 ###################################################################################################
 
-PLTS_PATH = '/Users/tom/Desktop/HyperEEG_Project/Figures/'
+PLTS_PATH = '/Users/tom/Documents/Research/1-Projects/HyperEEG/4-Figures/'
 
 ###################################################################################################
 ###################################################################################################
@@ -21,11 +21,11 @@ def plot_results(times, results, labels, save_fig=False, save_name=None):
     Parameters
     ----------
     times : 1d array
-        xx
+        Vector of time values, to plot of the x-axis.
     results : list of 1d arrays
-        xx
-    labels :
-        xx
+        List of data vectors to plot on the y-axis.
+    labels : list of string
+        Labels to use in the legend. Must have same length as results.
     """
 
     fig, ax = plt.subplots(figsize=(14, 6))
@@ -69,18 +69,22 @@ def plot_results(times, results, labels, save_fig=False, save_name=None):
 
 
 def plot_time_class(times, dat, err=None, ax=None, *args, **kwargs):
-    """
+    """Plot a
 
     Parameters
     ----------
-    times :
-        xx
-    dat :
-        xx
-    err :
-        xx
-    ax :
-        xx
+    times : 1d vector
+        Vector of time values, to plot on the x-axis.
+    dat : 1d vector
+        Vector of data values, to plot on the y-axis.
+    err : 1d vector
+        Vector of errors per data value, to shade in.
+    ax : matplotlib axes object, optional
+        Axes object to plot on. If None, creates a new axis.
+
+    Notes
+    -----
+    This is mostly a sub-function to plot each line in 'plot_results.'
     """
 
     if not ax:

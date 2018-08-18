@@ -6,7 +6,7 @@ import numpy as np
 from scipy.stats import zscore
 
 from hypeeg.features import AVGS
-from hypeeg.settings import N_EPOCHS, N_PER_COND, DEFAULT_AVG
+from hypeeg.settings import N_PER_COND, DEFAULT_AVG
 
 ###################################################################################################
 ###################################################################################################
@@ -108,7 +108,7 @@ def make_2d(dat, z_score=True):
     return dat
 
 
-def make_3d(dat):
+def make_3d(dat, n_epochs):
     """Reorganize a 2D matrix into the 3D trial structure matrix.
 
     Parameters
@@ -116,6 +116,8 @@ def make_3d(dat):
     dat : 2d array
         Continuous data matrix of epochs concatendat in time, as [n_channels, n_times_tot]
             Note: where n_times_tot = n_times * n_epochs
+    n_epochs : int
+        The number of epochs that the continuous data is to be divided into.
 
     Results
     -------
@@ -123,17 +125,33 @@ def make_3d(dat):
         Epoched data matrix, as [n_epochs, n_channels, n_times]
     """
 
-    return np.stack(np.split(dat, N_EPOCHS, 1))
+    return np.stack(np.split(dat, n_epochs, 1))
 
 
 def print_avg(label, score):
-    """   """
+    """Print out an average score.
+
+    Parameters
+    ----------
+    label : string
+        The label to print out before the score.
+    score : float
+        A score that is converted to a % and then printed.
+    """
 
     print(label + ': {:1.2f}%'.format(score *100))
 
 
 def print_avgs(label, scores):
-    """   """
+    """Print out average scores per subject.
+
+    Parameters
+    ----------
+    label : string
+        The label to print out before the score.
+    score : float
+        A score that is converted to a % and then printed.
+    """
 
     print(label + ':')
     for ind, score in enumerate(scores):
