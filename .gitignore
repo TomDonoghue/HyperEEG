@@ -2,6 +2,8 @@
 */.ipynb_checkpoints/*
 # Ignore cache files
 */__pycache__/*
+# Ignore compiled files
+*.pyc
 # Ignore data files
 *.csv
 *.p
