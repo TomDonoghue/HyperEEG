@@ -26,10 +26,11 @@ from hypeeg.plts import plot_results
 from hypeeg.settings import *
 
 # Set data location for processed files
-DAT_PATH = '/Users/tom/Desktop/HyperEEG_Project/Data/proc/'
+DAT_PATH = '/Users/tom/Documents/Research/1-Projects/HyperEEG/2-Data/proc/'
 
-FILTER_SETTINGS = [('None', None, None), ('SCP', None, 5),
-                   ('5-15', 5, 15), ('15_30', 15, 30)]
+#FILTER_SETTINGS = [('None', None, None), ('SCP', None, 5),
+#                   ('5-15', 5, 15), ('15_30', 15, 30)]
+FILTER_SETTINGS = [('None', None, None)]
 
 ###################################################################################################
 ###################################################################################################
@@ -43,7 +44,7 @@ def main():
     #  Note: this currently excludes first subject, because they are weird.
     dat_files = [file for file in os.listdir(DAT_PATH)[1:] if 'epo.fif' in file]
 
-    # Grab a time definition
+    # Create time definition vector
     times = np.arange(-1, 1, 1/100)
 
     ###################################################################################################
@@ -53,6 +54,8 @@ def main():
         # Load (or reload) all subject data
         all_subjs = [read_epochs(os.path.join(DAT_PATH, f_name),
                              preload=True, verbose=None) for f_name in dat_files]
+
+        print('\tRunning across {:1d} subjects.'.format(len(all_subjs)))
 
         f_label, f_low, f_high = filter_setting
         print('\t\tRunning filters:', f_label)
@@ -81,7 +84,7 @@ def main():
         #     This is beacause align assumes data in orientation of [n_samples x n_channels]
         aligned_data = align([dat.T for dat in all_data_2d], align=ALIGN)
         aligned_data = [dat.T for dat in aligned_data]
-        aligned_data = [make_3d(dat) for dat in aligned_data]
+        aligned_data = [make_3d(dat, N_EPOCHS) for dat in aligned_data]
 
         ###################################################################################################
 
@@ -130,6 +133,7 @@ def main():
 
         # Make an amazing plot
         plot_results(times, results, labels, save_fig=True, save_name=f_label + '_' + ALIGN)
+
 
 if __name__ == '__main__':
     main()
