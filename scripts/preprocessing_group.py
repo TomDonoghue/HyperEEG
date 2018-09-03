@@ -3,7 +3,6 @@
 import os
 import csv
 import pickle
-from copy import deepcopy
 from collections import Counter
 
 import numpy as np
@@ -50,7 +49,12 @@ N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
 # EPOCH SETTINGS
 TMIN, TMAX = -4., 4. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
+
+# Channel Settings
 EOG_CHS = ['E8', 'E14','E21','E25']
+EOG_MAPPINGS = {'E8'   : 'eog', 'E14'  : 'eog', 'E17'  : 'eog',
+                'E21'  : 'eog', 'E25'  : 'eog', 'E125' : 'eog',
+                'E126' : 'eog', 'E127' : 'eog', 'E128' : 'eog'}
 
 # Processing options
 RUN_ICA = True
@@ -106,6 +110,7 @@ def main():
         montage = mne.channels.read_montage('GSN-HydroCel-129', ch_names=raws[0].ch_names)
         for raw in raws:
             raw.set_montage(montage)
+            raw.set_channel_types(EOG_MAPPINGS)
             raw.drop_channels(raw.ch_names[128:-1])
             raw.filter(l_freq=L_FREQ, h_freq=H_FREQ, fir_design='firwin')
 
@@ -167,13 +172,16 @@ def main():
             print('\tRunning ICA')
 
             # High-pass filter for the purpose of ICA de-noising
-            raw_hpf = deepcopy(raw)
+            raw_hpf = raw.copy()
             raw_hpf.filter(l_freq=1., h_freq=None, fir_design='firwin', verbose=False)
             epochs_hpf = mne.Epochs(raw_hpf, new_events, new_event_ids,
                                     tmin=TMIN, tmax=TMAX, picks=None,
                                     baseline=BASELINE, reject=None, preload=True)
+
+            # Get the EEG picks (eeg electrode indices), ignoring bad channels as marked by Faster
+            eeg_ica_picks = mne.pick_types(epochs_hpf.info, meg=False, eeg=True)
             ica = ICA(random_state=1)
-            ica.fit(epochs_hpf)
+            ica.fit(epochs_hpf, picks=eeg_ica_picks)
 
             # Define bad components by correlating with channels near eyes
             eog_chs = [ch for ch in EOG_CHS if ch not in raw.info['bads']]
