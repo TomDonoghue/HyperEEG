@@ -1,9 +1,4 @@
-"""Group pre-processing script for the EEG HyperAlignment project.
-
-Notes
------
-- I hope this works.
-"""
+"""Group pre-processing script for the EEG HyperAlignment project."""
 
 import os
 import csv
@@ -26,32 +21,39 @@ from faster import faster_bad_channels
 ###################################################################################################
 ###################################################################################################
 
-# SETTINGS
+## SETTINGS
 
-# Set which task to run
+# TASK SETTINGS
+#   Set which task to run
 TASK = 'contrast'
+#TASK = 'surr_supp'
+#TASK = 'movie'
 
 # EVENT CODES
-#  Note: all event codes represent [LeftTrials, RightTrials]
-TRGT_EVCS = [4, 5]          # Target event codes, as in raw data
-RSPN_EVCS = [1, 2]          # Response event codes, as in raw data
-CORR_EVCS = [21, 22]        # New event ids to use for correct responses.
+if TASK == 'contrast':
+    #  Note: all event codes represent [LeftTrials, RightTrials]
+    TRGT_EVCS = [4, 5]          # Target event codes, as in raw data
+    RSPN_EVCS = [1, 2]          # Response event codes, as in raw data
+    CORR_EVCS = [21, 22]        # New event ids to use for correct responses.
 
-# FILTER
-L_FREQ, H_FREQ = 0.1, 30. # filter settings
+# FILTER SETTINGS
+L_FREQ, H_FREQ = 0.1, 30.
+
+# MINIMUM DATA REQUIREMENTS
+N_BLOCKS = 2 # minimum number of blocks a subject needs for analysis
+N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
 
 # EPOCH SETTINGS
 TMIN, TMAX = -1., 1. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
 EOG_CHS = ['E8', 'E14','E21','E25']
-N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
 
 # Processing options
 RUN_ICA = True
 RUN_AUTOREJECT = True
 
 # Set paths
-BASE_PATH = '/Users/tom/Desktop/HyperEEG_Project/Data/'
+BASE_PATH = '/Users/tom/Documents/Research/1-Projects/HyperEEG/2-Data/'
 DATA_PATH = os.path.join(BASE_PATH, 'raw')
 PROC_PATH = os.path.join(BASE_PATH, 'proc')
 ICA_PATH  = os.path.join(BASE_PATH, 'ica')
@@ -89,11 +91,11 @@ def main():
         subj_path = os.path.join(DATA_PATH, subnum, 'EEG', 'raw', 'raw_format')
         subj_files = list(fms.loc[(fms["SUBNUM"] == subnum) & (fms["TASK"] == TASK)]["FILE"].values)
 
-        # Stop if subject doesn't have enough data
-        if len(subj_files) < 2:
+        # Stop if subject doesn't have enough data, defined in terms of number of blocks ('runs')
+        if len(subj_files) < N_BLOCKS:
             print('Subject does not have enough data')
             continue
-        
+
         raws = [mne.io.read_raw_egi(os.path.join(subj_path, raw_file), preload=True) for raw_file in subj_files]
 
         # Set montage, drop misc channels, and filter
