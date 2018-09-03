@@ -16,7 +16,11 @@ from mne.event import define_target_events
 from mne.preprocessing import ICA
 
 from autoreject import AutoReject
-from faster import faster_bad_channels
+
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.getcwd())))
+from hypeeg.faster import faster_bad_channels
 
 ###################################################################################################
 ###################################################################################################
@@ -44,7 +48,7 @@ N_BLOCKS = 2 # minimum number of blocks a subject needs for analysis
 N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
 
 # EPOCH SETTINGS
-TMIN, TMAX = -1., 1. # epoch boundaries
+TMIN, TMAX = -4., 4. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
 EOG_CHS = ['E8', 'E14','E21','E25']
 
@@ -112,7 +116,11 @@ def main():
 
         print('\tEvent Management')
 
-        events = mne.find_events(raw, verbose=False)
+        try:
+            events = mne.find_events(raw, verbose=False)
+        except:
+            print('Subject has weird shortest_event error...skipping')
+            continue
 
         # Create correct-response events
         new_events = []
@@ -131,8 +139,8 @@ def main():
         if not np.any(new_events):
             print('Subject has no correct trials...')
             continue
-        elif new_events.shape[1] < N_EPOCHS:
-            print('Subject has too few trials for analysis')
+        elif new_events.shape[0] < N_EPOCHS:
+            print('Subject has too few trials for analysis: %d' % new_events.shape[0])
             continue
 
         # Create epochs object
@@ -216,7 +224,7 @@ def main():
 
         # Don't save the subject's data if they don't have enough epochs
         if len(epochs) < N_EPOCHS:
-            print('Subject has too few trials for analysis')
+            print('Subject has too few trials for analysis after preprocessing')
             continue
 
         # Save out pre-processed data
