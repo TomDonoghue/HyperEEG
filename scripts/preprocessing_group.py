@@ -21,7 +21,11 @@ from mne.event import define_target_events
 from mne.preprocessing import ICA
 
 from autoreject import AutoReject
-from faster import faster_bad_channels
+
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.getcwd())))
+from hypeeg.faster import faster_bad_channels
 
 ###################################################################################################
 ###################################################################################################
@@ -41,7 +45,7 @@ CORR_EVCS = [21, 22]        # New event ids to use for correct responses.
 L_FREQ, H_FREQ = 0.1, 30. # filter settings
 
 # EPOCH SETTINGS
-TMIN, TMAX = -1., 1. # epoch boundaries
+TMIN, TMAX = -4., 4. # epoch boundaries
 BASELINE = (0.5, None) # period for baseline correction
 EOG_CHS = ['E8', 'E14','E21','E25']
 N_EPOCHS = 40 # minimum number of epochs a subject needs for analysis
@@ -51,7 +55,7 @@ RUN_ICA = True
 RUN_AUTOREJECT = True
 
 # Set paths
-BASE_PATH = '/Users/tom/Desktop/HyperEEG_Project/Data/'
+BASE_PATH = '/Users/jarrodmhicks/Dropbox (MIT)/HyperEEG/CMI/Data/'
 DATA_PATH = os.path.join(BASE_PATH, 'raw')
 PROC_PATH = os.path.join(BASE_PATH, 'proc')
 ICA_PATH  = os.path.join(BASE_PATH, 'ica')
@@ -93,7 +97,7 @@ def main():
         if len(subj_files) < 2:
             print('Subject does not have enough data')
             continue
-        
+
         raws = [mne.io.read_raw_egi(os.path.join(subj_path, raw_file), preload=True) for raw_file in subj_files]
 
         # Set montage, drop misc channels, and filter
@@ -110,7 +114,11 @@ def main():
 
         print('\tEvent Management')
 
-        events = mne.find_events(raw, verbose=False)
+        try:
+            events = mne.find_events(raw, verbose=False)
+        except:
+            print('Subject has weird shortest_event error...skipping')
+            continue
 
         # Create correct-response events
         new_events = []
@@ -129,8 +137,8 @@ def main():
         if not np.any(new_events):
             print('Subject has no correct trials...')
             continue
-        elif new_events.shape[1] < N_EPOCHS:
-            print('Subject has too few trials for analysis')
+        elif new_events.shape[0] < N_EPOCHS:
+            print('Subject has too few trials for analysis: %d' % new_events.shape[0])
             continue
 
         # Create epochs object
@@ -214,7 +222,7 @@ def main():
 
         # Don't save the subject's data if they don't have enough epochs
         if len(epochs) < N_EPOCHS:
-            print('Subject has too few trials for analysis')
+            print('Subject has too few trials for analysis after preprocessing')
             continue
 
         # Save out pre-processed data
