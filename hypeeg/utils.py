@@ -5,6 +5,8 @@ from collections import Counter
 import numpy as np
 from scipy.stats import zscore
 
+import mne
+
 from hypeeg.features import AVGS
 from hypeeg.settings import N_PER_COND, DEFAULT_AVG
 
@@ -18,6 +20,12 @@ def extract_data(dat, l_freq=None, h_freq=None, resample=False):
     ----------
     dat : mne.Epochs object
         A subject's worth of epoched data.
+    l_freq : float
+        Low frequency to filter data to.
+    h_freq : float
+        High frequency to filter data to.
+    resample : bool
+        Whether to resample the data, or not.
 
     Returns
     -------
