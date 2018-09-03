@@ -36,7 +36,7 @@ def plot_results(times, results, labels, save_fig=False, save_name=None):
     # Chance line @ 50%
     plot_time_class(times, np.ones(len(times)) * 0.5, ax=ax, color='grey', alpha=0.7)
 
-    ax.set_xlim([-1, 1])
+    ax.set_xlim([times.min(), times.max()])
     ax.set_ylim([0.4, 0.9])
 
     ax.set_xlabel('Time (s)', fontsize=14)
