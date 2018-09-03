@@ -45,8 +45,9 @@ def extract_data(dat, l_freq=None, h_freq=None, resample=False):
         dat.resample(100)
 
     # Extract trial data
-    eps_a = dat[evc_a]._data[0:N_PER_COND, 0:128, :]
-    eps_b = dat[evc_b]._data[0:N_PER_COND, 0:128, :]
+    eeg_picks = mne.pick_types(dat.info, meg=False, eeg=True)
+    eps_a = dat[evc_a].get_data()[0:N_PER_COND, eeg_picks, :]
+    eps_b = dat[evc_b].get_data()[0:N_PER_COND, eeg_picks, :]
 
     # Check all our shapes and sizes are correct
     assert len(lab_a) == np.shape(eps_a)[0]
